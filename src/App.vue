@@ -4,8 +4,9 @@ import GuitarNeck from './components/GuitarNeck.vue'
 import NoteIntervalLegend from './components/NoteIntervalLegend.vue'
 import {
   CHROMATIC_NOTES, TUNING_PRESETS, CHORD_INTERVALS, SCALE_INTERVALS,
-  getChordNotes, getScaleNotes, parseNote,
-  type Note, type ChordQuality, type ScaleType, type TuningPreset,
+  getChordNotes, getScaleNotes, parseNote, noteAtSemitone,
+  DIATONIC_DEGREES,
+  type Note, type ChordQuality, type ScaleType, type TuningPreset, type DiatonicLabel,
 } from './utils/music'
 
 // ── Tuning ───────────────────────────────────────────────────────────────────
@@ -52,6 +53,19 @@ const highlightNotes = computed<Note[]>(() => {
 const modeLabel = computed(() => {
   if (mode.value === 'chord') return `${rootNote.value} ${chordQuality.value}`
   return `${rootNote.value} ${scaleType.value}`
+})
+
+// ── Key filter (diatonic chords within scale) ─────────────────────────────────
+const keyFilter = ref<DiatonicLabel>('all')
+
+watch(mode, () => { keyFilter.value = 'all' })
+
+const focusedNotes = computed<Note[] | null>(() => {
+  if (mode.value !== 'scale' || keyFilter.value === 'all') return null
+  const deg = DIATONIC_DEGREES.find(d => d.label === keyFilter.value)
+  if (!deg || deg.degree === null || !deg.quality) return null
+  const chordRoot = noteAtSemitone(rootNote.value, deg.degree)
+  return getChordNotes(chordRoot, deg.quality)
 })
 
 // ── Quick chord shortcuts ─────────────────────────────────────────────────────
@@ -230,26 +244,45 @@ const noteNames = [...CHROMATIC_NOTES]
           </div>
         </div>
 
-        <div v-else class="space-y-2">
-          <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">Scale Type</h2>
-          <div class="flex flex-wrap gap-2">
-            <button
-              v-for="s in QUICK_SCALES"
-              :key="s"
-              class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border"
-              :class="scaleType === s
-                ? 'bg-violet-600 border-violet-500 text-white'
-                : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'"
-              @click="scaleType = s"
-            >
-              {{ s }}
-            </button>
-            <select
-              v-model="scaleType"
-              class="px-3 py-1.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 text-zinc-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
-            >
-              <option v-for="(_, s) in SCALE_INTERVALS" :key="s" :value="s">{{ s }}</option>
-            </select>
+        <div v-else class="space-y-4">
+          <div class="space-y-2">
+            <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">Scale Type</h2>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="s in QUICK_SCALES"
+                :key="s"
+                class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border"
+                :class="scaleType === s
+                  ? 'bg-violet-600 border-violet-500 text-white'
+                  : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'"
+                @click="scaleType = s"
+              >
+                {{ s }}
+              </button>
+              <select
+                v-model="scaleType"
+                class="px-3 py-1.5 rounded-lg text-sm bg-zinc-800 border border-zinc-700 text-zinc-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              >
+                <option v-for="(_, s) in SCALE_INTERVALS" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-2 border-t border-zinc-700/60 pt-4">
+            <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">Key — Diatonic Chord</h2>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="deg in DIATONIC_DEGREES"
+                :key="deg.label"
+                class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border"
+                :class="keyFilter === deg.label
+                  ? 'bg-teal-600 border-teal-500 text-white'
+                  : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'"
+                @click="keyFilter = deg.label"
+              >
+                {{ deg.label }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -273,6 +306,7 @@ const noteNames = [...CHROMATIC_NOTES]
           :highlight-notes="highlightNotes"
           :root-note="rootNote"
           :fret-count="fretCount"
+          :focused-notes="focusedNotes"
         />
       </div>
 

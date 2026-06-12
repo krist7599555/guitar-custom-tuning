@@ -66,6 +66,20 @@ export function getChordNotes(root: Note, quality: ChordQuality): Note[] {
   return CHORD_INTERVALS[quality].map(i => noteAtSemitone(root, i % 12))
 }
 
+// Diatonic chord degrees for a major key (semitone offset from root + chord quality for 7th chord)
+export const DIATONIC_DEGREES = [
+  { label: 'all',        degree: null,  quality: null         },
+  { label: '1/1maj7',   degree: 0,     quality: 'maj7'  as ChordQuality },
+  { label: '2m/2m7',    degree: 2,     quality: 'min7'  as ChordQuality },
+  { label: '3m/3m7',    degree: 4,     quality: 'min7'  as ChordQuality },
+  { label: '4/4maj7',   degree: 5,     quality: 'maj7'  as ChordQuality },
+  { label: '5/57',      degree: 7,     quality: '7'     as ChordQuality },
+  { label: '6/6m',      degree: 9,     quality: 'min7'  as ChordQuality },
+  { label: '7dim/7dim7',degree: 11,    quality: 'dim7'  as ChordQuality },
+] as const
+
+export type DiatonicLabel = typeof DIATONIC_DEGREES[number]['label']
+
 export function getScaleNotes(root: Note, scale: ScaleType): Note[] {
   return SCALE_INTERVALS[scale].map(i => noteAtSemitone(root, i % 12))
 }

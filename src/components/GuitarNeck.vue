@@ -9,11 +9,13 @@ const props = withDefaults(defineProps<{
   highlightNotes?: Note[]
   rootNote?: Note | null
   fretCount?: number
+  focusedNotes?: Note[] | null
 }>(), {
   capo: 0,
   highlightNotes: () => [],
   rootNote: null,
   fretCount: 15,
+  focusedNotes: null,
 })
 
 // color per interval distance from root (root=0, 1..11)
@@ -48,6 +50,10 @@ function noteClass(note: Note): string {
 
 function isHighlighted(note: Note): boolean {
   return props.highlightNotes.includes(note)
+}
+
+function isDimmed(note: Note): boolean {
+  return props.focusedNotes !== null && !props.focusedNotes.includes(note)
 }
 
 function openStringNote(stringNote: Note): Note {
@@ -100,7 +106,10 @@ function openStringNote(stringNote: Note): Note {
               :class="[
                 isHighlighted(openStringNote(stringNote))
                   ? noteClass(openStringNote(stringNote)) + ' shadow-md'
-                  : 'bg-zinc-700/60 text-zinc-400'
+                  : 'bg-zinc-700/60 text-zinc-400',
+                isHighlighted(openStringNote(stringNote)) && isDimmed(openStringNote(stringNote))
+                  ? 'opacity-30 grayscale'
+                  : ''
               ]"
             >
               {{ openStringNote(stringNote) }}
@@ -139,7 +148,10 @@ function openStringNote(stringNote: Note): Note {
               <div
                 v-if="isHighlighted(noteAtFret(stringNote, fret, capo))"
                 class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold z-10 shadow-md transition-all duration-200 cursor-default select-none"
-                :class="noteClass(noteAtFret(stringNote, fret, capo))"
+                :class="[
+                  noteClass(noteAtFret(stringNote, fret, capo)),
+                  isDimmed(noteAtFret(stringNote, fret, capo)) ? 'opacity-30 grayscale' : ''
+                ]"
               >
                 {{ noteAtFret(stringNote, fret, capo) }}
               </div>
