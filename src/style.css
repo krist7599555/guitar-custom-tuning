@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+
+@layer base {
+  body {
+    @apply bg-zinc-950 text-zinc-100 min-h-screen;
+    font-family: system-ui, sans-serif;
+  }
+}
+
+.fretboard {
+  background: linear-gradient(
+    180deg,
+    #1a0e08 0%,
+    #2d1a0e 20%,
+    #1f1208 40%,
+    #2a1810 60%,
+    #1a0f0a 80%,
+    #2d1a0e 100%
+  );
+}
